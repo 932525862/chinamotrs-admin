@@ -7,7 +7,6 @@ import { useAuthStore } from '@/stores/auth';
 
 export function DashboardLayout() {
     const { checkAuth } = useAuthStore();
-    // const { sidebarOpen } = useDashboardStore();
 
     useEffect(() => {
         checkAuth();
@@ -18,7 +17,7 @@ export function DashboardLayout() {
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Header />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto p-5">
                     <Outlet />
                 </main>
             </div>

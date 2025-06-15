@@ -4,12 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 #root {
-  max-width: 1280px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
   text-align: center;
 }
-
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
