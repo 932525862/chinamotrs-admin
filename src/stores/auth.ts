@@ -1,70 +1,102 @@
+import { axiosInstance } from "@/lib/axiosIntance";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface User {
-  id: string;
-  phone_number: number;
-  password: string;
-}
-
 interface AuthState {
-  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone_number: number, password: string) => Promise<boolean>;
+  error: string | null;
+  login: (phoneNumber: string, password: string) => Promise<boolean>;
   logout: () => void;
   checkAuth: () => void;
+  clearError: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      error: null,
 
-      login: async (phone_number: number, password: string) => {
-        set({ isLoading: true });
+      login: async (phoneNumber: string, password: string) => {
+        set({ isLoading: true, error: null });
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        try {
+          const response = await axiosInstance.post("/api/auth/login", {
+            phoneNumber,
+            password,
+          });
 
-        // Simple validation - in real app, this would be an API call
-        if (phone_number === Number(931004027) && password === "password") {
-          const user: User = {
-            id: "1",
-            phone_number: Number(931004027),
-            password: "password",
+          const data = response.data as { accessToken?: string; data?: { id?: string; phoneNumber?: string; accessToken?: string } };
+          console.log(data.accessToken, "Response from login");
+
+          // Handle successful response
+          const userData = data.data as {
+            id?: string;
+            phoneNumber?: string;
+            accessToken?: string;
           };
 
+          console.log(userData, "User data");
+
+          // Store accessToken if provided
+          if (userData.accessToken) {
+            localStorage.setItem("auth-token", userData.accessToken);
+          }
+
           set({
-            user,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
+
           return true;
-        } else {
-          set({ isLoading: false });
+        } catch (error: any) {
+          console.error("Login failed:", error);
+
+          const errorMessage =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Login failed. Please try again.";
+
+          set({
+            isLoading: false,
+            error: errorMessage,
+            isAuthenticated: false,
+          });
+
           return false;
         }
       },
 
       logout: () => {
+        // Clear token and storage
+        localStorage.removeItem("auth-token");
+        localStorage.removeItem("auth-storage");
+
         set({
-          user: null,
           isAuthenticated: false,
+          error: null,
         });
       },
 
       checkAuth: () => {
-        const { user } = get();
-        set({ isAuthenticated: !!user });
+        const token = localStorage.getItem("auth-token");
+
+        set({
+          isAuthenticated: !!token,
+        });
+      },
+
+      clearError: () => {
+        set({ error: null });
       },
     }),
     {
       name: "auth-storage",
       partialize: (state) => ({
-        user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
     }

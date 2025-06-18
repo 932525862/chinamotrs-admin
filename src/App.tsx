@@ -1,39 +1,36 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { useAuthStore } from './stores/auth';
 import { LoginForm } from './components/auth/login-form';
 import { DashboardLayout } from './layout/dashboard';
-import { NewsPage } from './pages/News';
 import { ProductsPage } from './pages/Products';
-import { CategoriesPage } from './pages/Categories';
+import { ProtectedRoute } from './routes/protectedRoutes';
+import NewsList from './pages/News/NewsList';
+import CategoryTable from './pages/Categories/CategoryList';
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
-
-  if (!isAuthenticated) {
-    return (
-      <>
-        <LoginForm />
-        <Toaster position="top-right" richColors />
-      </>
-    );
-  }
-
   return (
-    <>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route path="news" element={<NewsPage />} />
+    <Router>
+      <Routes>
+        {/* Login route */}
+        <Route path="/login" element={<LoginForm />} />
+
+        {/* Protected routes */}
+        <Route path="/dashboard" element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route index element={<Navigate to="news" replace />} />
+            <Route path="news" element={<NewsList />} />
             <Route path="products" element={<ProductsPage />} />
-            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="categories" element={<CategoryTable />} />
+            <Route path="*" element={<Navigate to="news" replace />} />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
+        </Route>
+
+        {/* Default fallback */}
+        <Route path="*" element={<Navigate to="/dashboard/news" replace />} />
+      </Routes>
+
       <Toaster position="top-right" richColors />
-    </>
+    </Router>
   );
 }
 
