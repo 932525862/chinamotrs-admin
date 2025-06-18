@@ -2,10 +2,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'sonner';
 import { LoginForm } from './components/auth/login-form';
 import { DashboardLayout } from './layout/dashboard';
-import { ProductsPage } from './pages/Products';
 import { ProtectedRoute } from './routes/protectedRoutes';
 import NewsList from './pages/News/NewsList';
 import CategoryTable from './pages/Categories/CategoryList';
+import PartnerList from './pages/Partners/PartnerList';
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route index element={<Navigate to="news" replace />} />
             <Route path="news" element={<NewsList />} />
-            <Route path="products" element={<ProductsPage />} />
+            <Route path="partners" element={<PartnerList />} />
             <Route path="categories" element={<CategoryTable />} />
             <Route path="*" element={<Navigate to="news" replace />} />
           </Route>

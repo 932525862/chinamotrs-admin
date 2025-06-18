@@ -8,10 +8,16 @@ type Props = {
 };
 
 const NewsCard = ({ news, onEdit, onDelete }: Props) => {
-    console.log(news, "News from news card")
+    const UPLOAD_BASE = import.meta.env.VITE_API_UPLOAD_BASE;
+    const imageUrl = `${UPLOAD_BASE}${news.image_url}`;
+
     return (
         <div className="border rounded-2xl p-4 space-y-2 shadow-sm bg-white">
-            <img src={news.imageUrl} alt="news" className="w-full h-40 object-cover rounded-xl" />
+            <img
+                src={imageUrl}
+                alt="news"
+                className="w-full h-40 object-cover rounded-xl"
+            />
             <p className="font-medium">UZ: {news.text.uz}</p>
             <p className="text-sm text-muted-foreground">RU: {news.text.ru}</p>
             <div className="flex justify-end gap-2 pt-2">

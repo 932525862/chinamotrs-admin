@@ -20,7 +20,9 @@ type Props = {
 const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
     const {
         text,
+        title,
         setText,
+        setTitle,
         setImage,
         image,
         createNews,
@@ -29,7 +31,8 @@ const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
         selectedNews,
     } = useNewsStore();
 
-    // Reset or load data based on mode
+    const UPLOAD_BASE = import.meta.env.VITE_API_UPLOAD_BASE;
+
     useEffect(() => {
         if (mode === "edit" && news) {
             getNewsById(news.id);
@@ -38,22 +41,11 @@ const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
         }
     }, [mode, news]);
 
-    // Revoke object URLs to prevent memory leaks
-    useEffect(() => {
-        let preview: string | null = null;
-        if (image) {
-            preview = URL.createObjectURL(image);
-        }
-        return () => {
-            if (preview) {
-                URL.revokeObjectURL(preview);
-            }
-        };
-    }, [image]);
-
     const resetFields = () => {
         setText("uz", "");
         setText("ru", "");
+        setTitle("uz", "");
+        setTitle("ru", "");
         setImage(new File([], ""));
     };
 
@@ -61,7 +53,7 @@ const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
         try {
             if (mode === "create") {
                 await createNews();
-                resetFields(); // ✅ clear inputs after creation
+                resetFields();
             } else if (news) {
                 await updateNews(news.id);
             }
@@ -71,22 +63,23 @@ const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
         }
     };
 
-    const previewImage = image
-        ? URL.createObjectURL(image)
-        : selectedNews?.imageUrl;
+    const previewImage =
+        image && image.name
+            ? URL.createObjectURL(image)
+            : mode === "edit" && selectedNews?.image_url
+                ? `${UPLOAD_BASE}${selectedNews.image_url}`
+                : null;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>
-                        {mode === "create" ? "Create News" : "Edit News"}
-                    </DialogTitle>
+                    <DialogTitle>{mode === "create" ? "Create News" : "Edit News"}</DialogTitle>
                 </DialogHeader>
 
-                {previewImage && (
+                {image?.name && (
                     <img
-                        src={previewImage}
+                        src={previewImage!}
                         alt="Preview"
                         className="w-full h-40 object-cover rounded-md mb-2"
                     />
@@ -108,18 +101,36 @@ const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
                     </div>
 
                     <div className="grid gap-1">
-                        <Label htmlFor="uz">Text (uz)</Label>
+                        <Label htmlFor="titleUz">Title (uz)</Label>
                         <Input
-                            id="uz"
+                            id="titleUz"
+                            value={title.uz}
+                            onChange={(e) => setTitle("uz", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="grid gap-1">
+                        <Label htmlFor="titleRu">Title (ru)</Label>
+                        <Input
+                            id="titleRu"
+                            value={title.ru}
+                            onChange={(e) => setTitle("ru", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="grid gap-1">
+                        <Label htmlFor="textUz">Text (uz)</Label>
+                        <Input
+                            id="textUz"
                             value={text.uz}
                             onChange={(e) => setText("uz", e.target.value)}
                         />
                     </div>
 
                     <div className="grid gap-1">
-                        <Label htmlFor="ru">Text (ru)</Label>
+                        <Label htmlFor="textRu">Text (ru)</Label>
                         <Input
-                            id="ru"
+                            id="textRu"
                             value={text.ru}
                             onChange={(e) => setText("ru", e.target.value)}
                         />
