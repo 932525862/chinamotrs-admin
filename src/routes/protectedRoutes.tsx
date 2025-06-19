@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-export function ProtectedRoute() {
+export function ProtectedRoute() { 
     const location = useLocation();
     const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
 
