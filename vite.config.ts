@@ -11,4 +11,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://api.grandfitness.com.uz",
+        changeOrigin: true,
+        secure: true,
+        // Remove the rewrite - let it pass through as is
+      },
+    },
+  },
 });

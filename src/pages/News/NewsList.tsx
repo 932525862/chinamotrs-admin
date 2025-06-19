@@ -6,7 +6,7 @@ import NewsCard from "./NewsCard";
 import NewsFormModal from "./NewsFormModal";
 import { useNewsStore, type NewsItem } from "@/stores/news";
 import { NewsDeleteModal } from "./NewsDeleteModal";
-import Pagination from "./NewsPagination";
+import Pagination from "@/components/pagination/pagination";
 
 
 const NewsList = () => {

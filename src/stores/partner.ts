@@ -5,9 +5,9 @@ import { create } from "zustand";
 export interface Partner {
   id: string;
   logo: string;
-  // Add other fields as needed
+  createdAt?: string;
+  updatedAt?: string;
 }
-
 
 type PartnerState = {
   partners: Partner[];
@@ -21,7 +21,7 @@ type PartnerState = {
   updatePartner: (id: string, logo: File) => Promise<void>;
   deletePartner: (id: string) => Promise<void>;
 
-  setSelectedPartner: (partner: Partner | null) => void; // ✅ Add this
+  setSelectedPartner: (partner: Partner | null) => void;
 };
 
 export const usePartnerStore = create<PartnerState>((set, get) => ({
@@ -30,7 +30,7 @@ export const usePartnerStore = create<PartnerState>((set, get) => ({
   loading: false,
   error: null,
 
-  setSelectedPartner: (partner) => set({ selectedPartner: partner }), // ✅ Implementation
+  setSelectedPartner: (partner) => set({ selectedPartner: partner }),
 
   fetchPartners: async () => {
     set({ loading: true, error: null });
@@ -39,6 +39,7 @@ export const usePartnerStore = create<PartnerState>((set, get) => ({
       set({ partners: res.data.data });
     } catch (err: any) {
       set({ error: err.message });
+      throw err;
     } finally {
       set({ loading: false });
     }
@@ -53,40 +54,79 @@ export const usePartnerStore = create<PartnerState>((set, get) => ({
       set({ selectedPartner: res.data.data });
     } catch (err: any) {
       set({ error: err.message });
+      throw err;
     } finally {
       set({ loading: false });
     }
   },
 
   createPartner: async (logo: File): Promise<void> => {
-    if (!logo || !(logo instanceof File)) return;
-
-    const formData: FormData = new FormData();
-    formData.append("logo", logo);
-
-    set({ loading: true, error: null });
-    try {
-      await axiosInstance.post("/api/partners", formData);
-      await get().fetchPartners();
-    } catch (err: any) {
-      set({ error: err.message });
-    } finally {
-      set({ loading: false });
+    // Validate file before processing
+    if (!logo || !(logo instanceof File) || logo.size === 0) {
+      throw new Error("Please provide a valid logo file");
     }
-  },
 
-  updatePartner: async (id: string, logo: File): Promise<void> => {
-    if (!logo || !(logo instanceof File)) return;
+    // Validate file type
+    if (!logo.type.startsWith("image/")) {
+      throw new Error("Logo must be an image file");
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (logo.size > maxSize) {
+      throw new Error("Logo file size must be less than 5MB");
+    }
 
     const formData = new FormData();
     formData.append("logo", logo);
 
     set({ loading: true, error: null });
     try {
-      await axiosInstance.patch(`/api/partners/${id}`, formData);
+      await axiosInstance.post("/api/partners", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       await get().fetchPartners();
     } catch (err: any) {
       set({ error: err.message });
+      throw err;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  updatePartner: async (id: string, logo: File): Promise<void> => {
+    // Validate file before processing
+    if (!logo || !(logo instanceof File) || logo.size === 0) {
+      throw new Error("Please provide a valid logo file");
+    }
+
+    // Validate file type
+    if (!logo.type.startsWith("image/")) {
+      throw new Error("Logo must be an image file");
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (logo.size > maxSize) {
+      throw new Error("Logo file size must be less than 5MB");
+    }
+
+    const formData = new FormData();
+    formData.append("logo", logo);
+
+    set({ loading: true, error: null });
+    try {
+      await axiosInstance.patch(`/api/partners/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      await get().fetchPartners();
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
     } finally {
       set({ loading: false });
     }
@@ -99,6 +139,7 @@ export const usePartnerStore = create<PartnerState>((set, get) => ({
       await get().fetchPartners();
     } catch (err: any) {
       set({ error: err.message });
+      throw err;
     } finally {
       set({ loading: false });
     }

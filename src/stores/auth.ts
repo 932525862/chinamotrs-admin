@@ -1,4 +1,3 @@
-// stores/useAuthStore.ts
 import { axiosInstance } from "@/lib/axiosIntance";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -24,29 +23,43 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await axiosInstance.post("/api/auth/login", {
+          console.log("Attempting login with:", { phoneNumber }); // Debug log
+
+          const response = await axiosInstance.post<{
+            data: { accessToken?: string };
+          }>("/api/auth/login", {
             phoneNumber,
             password,
           });
 
-          const userData = (response.data as { data: any }).data;
+          console.log("Login response:", response); // Debug log
+
+          const userData = response.data.data;
 
           if (userData?.accessToken) {
             localStorage.setItem("auth-token", userData.accessToken);
+
+            set({
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+
+            return true;
+          } else {
+            throw new Error("No access token received");
           }
-
-          set({
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-
-          return true;
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message ||
-            error?.message ||
-            "Login failed. Please try again.";
+          console.error("Login error:", error); // Debug log
+
+          let errorMessage = "Login failed. Please try again.";
+
+          // Better error handling
+          if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
 
           set({
             isLoading: false,

@@ -7,7 +7,7 @@ type Props = {
     onDelete: () => void;
 };
 
-const BannerCard = ({ banners, onEdit, onDelete }: Props) => {
+const BannersCard = ({ banners, onEdit, onDelete }: Props) => {
     const UPLOAD_BASE = import.meta.env.VITE_API_UPLOAD_BASE;
     const imageUrl = `${UPLOAD_BASE}${banners.image_url}`;
 
@@ -28,4 +28,4 @@ const BannerCard = ({ banners, onEdit, onDelete }: Props) => {
     );
 };
 
-export default BannerCard;
+export default BannersCard;

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useBannersStore, type BannerItem } from "@/stores/banner";
-import BannerCard from "./BannersCard";
+import BannersCard from "./BannersCard";
 import BannersFormModal from "./BannersFormModal";
 import { BannersDeleteModal } from "./BannersDeleteModal";
 
 
-const BannerList = () => {
+const BannersList = () => {
     const { banners, fetchBanners, } = useBannersStore();
     const [selected, setSelected] = useState<BannerItem | null>(null);
     const [formOpen, setFormOpen] = useState(false);
@@ -44,7 +44,7 @@ const BannerList = () => {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {banners?.map((item) => (
-                    <BannerCard
+                    <BannersCard
                         key={item.id}
                         banners={item}
                         onEdit={() => handleEdit(item)}
@@ -69,4 +69,4 @@ const BannerList = () => {
     );
 };
 
-export default BannerList;
+export default BannersList;

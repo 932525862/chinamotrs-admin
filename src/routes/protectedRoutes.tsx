@@ -4,8 +4,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-export function ProtectedRoute() { 
-    const location = useLocation();
+export function ProtectedRoute() {
+    const { pathname } = useLocation();
     const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
 
     useEffect(() => {
@@ -14,7 +14,7 @@ export function ProtectedRoute() {
 
         // Validate token presence on first load
         checkAuth();
-    }, [location.pathname]);
+    }, [pathname]);
 
     // Optional: show loading UI during auth check
     if (isLoading) {

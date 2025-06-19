@@ -6,11 +6,13 @@ import { ProtectedRoute } from './routes/protectedRoutes';
 import NewsList from './pages/News/NewsList';
 import CategoryTable from './pages/Categories/CategoryList';
 import PartnerList from './pages/Partners/PartnerList';
-import BannerList from './pages/Banners/BannersList';
-import OrdersList from './pages/Orders/OrdersList';
 import ProductsList from './pages/Products/ProductsList';
+import OrderList from './pages/Orders/OrdersList';
+import BannersList from './pages/Banners/BannersList';
 
 function App() {
+
+  console.log(import.meta.env.VITE_API_BASE_URL, "Base")
   return (
     <Router>
       <Routes>
@@ -23,8 +25,8 @@ function App() {
             <Route index element={<Navigate to="news" replace />} />
             <Route path="news" element={<NewsList />} />
             <Route path="partners" element={<PartnerList />} />
-            <Route path="banners" element={<BannerList />} />
-            <Route path="orders" element={<OrdersList />} />
+            <Route path="banners" element={<BannersList />} />
+            <Route path="orders" element={<OrderList />} />
             <Route path="categories" element={<CategoryTable />} />
             <Route path="products" element={<ProductsList />} />
             <Route path="*" element={<Navigate to="news" replace />} />

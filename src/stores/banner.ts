@@ -1,5 +1,5 @@
+import { axiosInstance } from "@/lib/axiosIntance";
 import { create } from "zustand";
-import axios from "axios";
 
 export type BannerItem = {
   id: number;
@@ -65,7 +65,7 @@ export const useBannersStore = create<BannerState>((set, get) => ({
   fetchBanners: async () => {
     try {
       set({ loading: true });
-      const res = await axios.get<{ data: BannerItem[]; meta: Meta }>(
+      const res = await axiosInstance.get<{ data: BannerItem[]; meta: Meta }>(
         `${API_BASE}/banners`
       );
       const { data, meta } = res.data;
@@ -85,7 +85,7 @@ export const useBannersStore = create<BannerState>((set, get) => ({
 
   getBannersById: async (id) => {
     try {
-      const res = await axios.get(`${API_BASE}/banners/${id}`);
+      const res = await axiosInstance.get(`${API_BASE}/banners/${id}`);
       const banners = (res.data as { data: BannerItem }).data;
       set({
         selectedBanners: banners,
@@ -105,7 +105,7 @@ export const useBannersStore = create<BannerState>((set, get) => ({
     formData.append("title", JSON.stringify(title));
 
     try {
-      await axios.post(`${API_BASE}/banners`, formData);
+      await axiosInstance.post(`${API_BASE}/banners`, formData);
       await get().fetchBanners(1);
     } catch (err: any) {
       set({ error: err.message });
@@ -120,7 +120,7 @@ export const useBannersStore = create<BannerState>((set, get) => ({
     formData.append("title", JSON.stringify(title));
 
     try {
-      await axios.patch(`${API_BASE}/banners/${id}`, formData);
+      await axiosInstance.patch(`${API_BASE}/banners/${id}`, formData);
       await get().fetchBanners();
     } catch (err: any) {
       set({ error: err.message });
@@ -129,7 +129,7 @@ export const useBannersStore = create<BannerState>((set, get) => ({
 
   deleteBanners: async (id) => {
     try {
-      await axios.delete(`${API_BASE}/banners/${id}`);
+      await axiosInstance.delete(`${API_BASE}/banners/${id}`);
       await get().fetchBanners();
     } catch (err: any) {
       set({ error: err.message });

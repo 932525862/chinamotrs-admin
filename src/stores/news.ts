@@ -1,5 +1,5 @@
+import { axiosInstance } from "@/lib/axiosIntance";
 import { create } from "zustand";
-import axios from "axios";
 
 export type NewsItem = {
   id: number;
@@ -27,8 +27,9 @@ type NewsState = {
 
   setText: (lang: TextLang, value: string) => void;
   setTitle: (lang: TextLang, value: string) => void;
-  setImage: (file: File) => void;
+  setImage: (file: File | null) => void;
   setPage: (page: number) => void;
+  resetForm: () => void;
 
   fetchNews: (page?: number) => Promise<void>;
   getNewsById: (id: number) => Promise<void>;
@@ -59,13 +60,28 @@ export const useNewsStore = create<NewsState>((set, get) => ({
     set((state) => ({
       title: { ...state.title, [lang]: value },
     })),
-  setImage: (file) => set({ image: file }),
+  setImage: (file) => {
+    // Ensure we're setting either a valid File or null
+    if (file === null || (file instanceof File && file.size > 0)) {
+      set({ image: file });
+    } else {
+      set({ image: null });
+    }
+  },
   setPage: (page) => set({ page }),
+
+  resetForm: () =>
+    set({
+      image: null,
+      text: { uz: "", ru: "" },
+      title: { uz: "", ru: "" },
+      selectedNews: null,
+    }),
 
   fetchNews: async (page = get().page) => {
     try {
       set({ loading: true });
-      const res = await axios.get<{ data: NewsItem[]; meta: Meta }>(
+      const res = await axiosInstance.get<{ data: NewsItem[]; meta: Meta }>(
         `${API_BASE}/news?page=${page}`
       );
       const { data, meta } = res.data;
@@ -85,12 +101,13 @@ export const useNewsStore = create<NewsState>((set, get) => ({
 
   getNewsById: async (id) => {
     try {
-      const res = await axios.get(`${API_BASE}/news/${id}`);
+      const res = await axiosInstance.get(`${API_BASE}/news/${id}`);
       const news = (res.data as { data: NewsItem }).data;
       set({
         selectedNews: news,
         text: news.text || { uz: "", ru: "" },
         title: news.title || { uz: "", ru: "" },
+        image: null, // Reset image when editing
       });
     } catch (err: any) {
       set({ error: err.message });
@@ -99,40 +116,83 @@ export const useNewsStore = create<NewsState>((set, get) => ({
 
   createNews: async () => {
     const { text, title, image } = get();
+
+    // Validate required fields
+    if (
+      !text.uz.trim() ||
+      !text.ru.trim() ||
+      !title.uz.trim() ||
+      !title.ru.trim()
+    ) {
+      throw new Error("Please fill in all required fields");
+    }
+
     const formData = new FormData();
-    if (image) formData.append("image", image);
+
+    // Only append image if it's a valid File object with content
+    if (image && image instanceof File && image.size > 0) {
+      formData.append("image", image);
+    }
+
     formData.append("text", JSON.stringify(text));
     formData.append("title", JSON.stringify(title));
 
     try {
-      await axios.post(`${API_BASE}/news`, formData);
+      await axiosInstance.post(`${API_BASE}/news`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       await get().fetchNews(1);
     } catch (err: any) {
       set({ error: err.message });
+      throw err;
     }
   },
 
   updateNews: async (id) => {
     const { text, title, image } = get();
+
+    // Validate required fields
+    if (
+      !text.uz.trim() ||
+      !text.ru.trim() ||
+      !title.uz.trim() ||
+      !title.ru.trim()
+    ) {
+      throw new Error("Please fill in all required fields");
+    }
+
     const formData = new FormData();
-    if (image?.name) formData.append("image", image);
+
+    // Only append image if it's a valid File object with content
+    if (image && image instanceof File && image.size > 0) {
+      formData.append("image", image);
+    }
+
     formData.append("text", JSON.stringify(text));
     formData.append("title", JSON.stringify(title));
 
     try {
-      await axios.patch(`${API_BASE}/news/${id}`, formData);
+      await axiosInstance.patch(`${API_BASE}/news/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       await get().fetchNews();
     } catch (err: any) {
       set({ error: err.message });
+      throw err;
     }
   },
 
   deleteNews: async (id) => {
     try {
-      await axios.delete(`${API_BASE}/news/${id}`);
+      await axiosInstance.delete(`${API_BASE}/news/${id}`);
       await get().fetchNews(get().page);
     } catch (err: any) {
       set({ error: err.message });
+      throw err;
     }
   },
 }));
