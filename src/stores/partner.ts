@@ -1,10 +1,13 @@
-import { create } from "zustand";
 import { axiosInstance } from "@/lib/axiosIntance";
+import { create } from "zustand";
 
-export type Partner = {
+// Define the Partner interface here and export it
+export interface Partner {
   id: string;
   logo: string;
-};
+  // Add other fields as needed
+}
+
 
 type PartnerState = {
   partners: Partner[];
@@ -17,6 +20,8 @@ type PartnerState = {
   createPartner: (logo: File) => Promise<void>;
   updatePartner: (id: string, logo: File) => Promise<void>;
   deletePartner: (id: string) => Promise<void>;
+
+  setSelectedPartner: (partner: Partner | null) => void; // ✅ Add this
 };
 
 export const usePartnerStore = create<PartnerState>((set, get) => ({
@@ -24,6 +29,8 @@ export const usePartnerStore = create<PartnerState>((set, get) => ({
   selectedPartner: null,
   loading: false,
   error: null,
+
+  setSelectedPartner: (partner) => set({ selectedPartner: partner }), // ✅ Implementation
 
   fetchPartners: async () => {
     set({ loading: true, error: null });
@@ -51,10 +58,10 @@ export const usePartnerStore = create<PartnerState>((set, get) => ({
     }
   },
 
-  createPartner: async (logo) => {
+  createPartner: async (logo: File): Promise<void> => {
     if (!logo || !(logo instanceof File)) return;
 
-    const formData = new FormData();
+    const formData: FormData = new FormData();
     formData.append("logo", logo);
 
     set({ loading: true, error: null });
@@ -68,7 +75,7 @@ export const usePartnerStore = create<PartnerState>((set, get) => ({
     }
   },
 
-  updatePartner: async (id, logo) => {
+  updatePartner: async (id: string, logo: File): Promise<void> => {
     if (!logo || !(logo instanceof File)) return;
 
     const formData = new FormData();

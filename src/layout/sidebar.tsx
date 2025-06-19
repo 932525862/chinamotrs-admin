@@ -1,4 +1,4 @@
-import { Newspaper, Package, FolderOpen, ChevronLeft, MessageCircle, Handshake, ListOrdered } from 'lucide-react';
+import { Newspaper, Package, FolderOpen, ChevronLeft, Handshake, ListOrdered, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useDashboardStore } from '@/stores/dashboard';
@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 const navigationItems = [
     { name: 'Yangiliklar', href: '/dashboard/news', icon: Newspaper },
     { name: 'Kategoriyalar', href: '/dashboard/categories', icon: FolderOpen },
-    { name: 'Izohlar', href: '/dashboard/comments', icon: MessageCircle },
+    { name: 'Bannerlar', href: '/dashboard/banners', icon: Image },
     { name: 'Sheriklar', href: '/dashboard/partners', icon: Handshake },
     { name: "Zakazlar", href: '/dashboard/orders', icon: ListOrdered },
     { name: 'Mahsulotlar', href: '/dashboard/products', icon: Package },

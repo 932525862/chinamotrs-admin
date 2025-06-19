@@ -9,13 +9,17 @@ type Props = {
     onDelete: (partner: Partner) => void;
 };
 
+
 const PartnerCard = ({ partner, onEdit, onDelete }: Props) => {
+
+    const UPLOAD_BASE = import.meta.env.VITE_API_UPLOAD_BASE;
+    const imageUrl = `${UPLOAD_BASE}${partner.logo}`;
     return (
         <Card className="p-4 flex flex-col items-center space-y-4">
             <img
-                src={partner.logo}
+                src={imageUrl}
                 alt="Partner Logo"
-                className="w-24 h-24 object-contain"
+                className="w-full h-40 object-contain"
             />
             <div className="flex gap-2">
                 <Button size="icon" variant="outline" onClick={() => onEdit(partner)}>

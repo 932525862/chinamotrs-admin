@@ -1,3 +1,4 @@
+// stores/useAuthStore.ts
 import { axiosInstance } from "@/lib/axiosIntance";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -15,7 +16,6 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -29,20 +29,9 @@ export const useAuthStore = create<AuthState>()(
             password,
           });
 
-          const data = response.data as { accessToken?: string; data?: { id?: string; phoneNumber?: string; accessToken?: string } };
-          console.log(data.accessToken, "Response from login");
+          const userData = (response.data as { data: any }).data;
 
-          // Handle successful response
-          const userData = data.data as {
-            id?: string;
-            phoneNumber?: string;
-            accessToken?: string;
-          };
-
-          console.log(userData, "User data");
-
-          // Store accessToken if provided
-          if (userData.accessToken) {
+          if (userData?.accessToken) {
             localStorage.setItem("auth-token", userData.accessToken);
           }
 
@@ -54,8 +43,6 @@ export const useAuthStore = create<AuthState>()(
 
           return true;
         } catch (error: any) {
-          console.error("Login failed:", error);
-
           const errorMessage =
             error?.response?.data?.message ||
             error?.message ||
@@ -72,7 +59,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        // Clear token and storage
         localStorage.removeItem("auth-token");
         localStorage.removeItem("auth-storage");
 
@@ -80,11 +66,12 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           error: null,
         });
+
+        window.location.href = "/login";
       },
 
       checkAuth: () => {
         const token = localStorage.getItem("auth-token");
-
         set({
           isAuthenticated: !!token,
         });

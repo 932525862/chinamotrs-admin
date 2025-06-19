@@ -5,17 +5,27 @@ import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 export function ProtectedRoute() {
-    const { pathname } = useLocation()
+    const location = useLocation();
+    const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
 
     useEffect(() => {
-        window.scrollTo({ top: 0 })
-    }, [pathname])
+        // Scroll to top on route change
+        window.scrollTo({ top: 0 });
 
-    const { isAuthenticated, isLoading } = useAuthStore();
+        // Validate token presence on first load
+        checkAuth();
+    }, [location.pathname]);
 
+    // Optional: show loading UI during auth check
     if (isLoading) {
         return <Loader />;
     }
 
-    return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    // Allow access to child routes
+    return <Outlet />;
 }
