@@ -1,55 +1,48 @@
-import { axiosInstance } from "@/lib/axiosIntance";
 import { create } from "zustand";
+import { axiosInstance } from "@/lib/axiosIntance";
 
-export type BannerItem = {
+export type Banner = {
   id: number;
   image_url: string;
+  title: { uz: string; ru: string };
   text: { uz: string; ru: string };
-  title: { uz: string; ru: string } | null;
   createdAt?: string;
-  lastUpdatedAt?: string;
 };
 
 type TextLang = "uz" | "ru";
-type Meta = { total: number; page: number; limit: number; totalPages: number };
 
 type BannerState = {
-  banners: BannerItem[];
-  selectedBanners: BannerItem | null;
+  banners: Banner[];
+  selectedBanner: Banner | null;
   image: File | null;
-  text: { uz: string; ru: string };
   title: { uz: string; ru: string };
-  page: number;
-  totalPages: number;
+  text: { uz: string; ru: string };
   loading: boolean;
   error: string | null;
-  meta: Meta | null;
 
   setText: (lang: TextLang, value: string) => void;
   setTitle: (lang: TextLang, value: string) => void;
-  setImage: (file: File) => void;
-  setPage: (page: number) => void;
+  setImage: (file: File | null) => void;
+  clearForm: () => void;
+  clearError: () => void;
 
-  fetchBanners: (page?: number) => Promise<void>;
-  getBannersById: (id: number) => Promise<void>;
-  createBanners: () => Promise<void>;
-  updateBanners: (id: number) => Promise<void>;
-  deleteBanners: (id: number) => Promise<void>;
+  fetchBanners: () => Promise<void>;
+  getBannerById: (id: number) => Promise<void>;
+  createBanner: () => Promise<void>;
+  updateBanner: (id: number) => Promise<void>;
+  deleteBanner: (id: number) => Promise<void>;
 };
 
 const API_BASE = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
-export const useBannersStore = create<BannerState>((set, get) => ({
+export const useBannerStore = create<BannerState>((set, get) => ({
   banners: [],
-  selectedBanners: null,
+  selectedBanner: null,
   image: null,
-  text: { uz: "", ru: "" },
   title: { uz: "", ru: "" },
-  page: 1,
-  totalPages: 1,
+  text: { uz: "", ru: "" },
   loading: false,
   error: null,
-  meta: null,
 
   setText: (lang, value) =>
     set((state) => ({
@@ -60,22 +53,23 @@ export const useBannersStore = create<BannerState>((set, get) => ({
       title: { ...state.title, [lang]: value },
     })),
   setImage: (file) => set({ image: file }),
-  setPage: (page) => set({ page }),
+
+  clearForm: () =>
+    set({
+      image: null,
+      title: { uz: "", ru: "" },
+      text: { uz: "", ru: "" },
+    }),
+
+  clearError: () => set({ error: null }),
 
   fetchBanners: async () => {
     try {
-      set({ loading: true });
-      const res = await axiosInstance.get<{ data: BannerItem[]; meta: Meta }>(
+      set({ loading: true, error: null });
+      const res = await axiosInstance.get<{ data: Banner[] }>(
         `${API_BASE}/banners`
       );
-      const { data, meta } = res.data;
-      set({
-        banners: data,
-        meta,
-        page: meta.page,
-        totalPages: meta.totalPages,
-        error: null,
-      });
+      set({ banners: res.data.data });
     } catch (err: any) {
       set({ error: err.message });
     } finally {
@@ -83,56 +77,97 @@ export const useBannersStore = create<BannerState>((set, get) => ({
     }
   },
 
-  getBannersById: async (id) => {
+  getBannerById: async (id) => {
     try {
-      const res = await axiosInstance.get(`${API_BASE}/banners/${id}`);
-      const banners = (res.data as { data: BannerItem }).data;
+      set({ error: null });
+      const res = await axiosInstance.get<{ data: Banner }>(
+        `${API_BASE}/banners/${id}`
+      );
+      const banner = res.data.data;
       set({
-        selectedBanners: banners,
-        text: banners.text || { uz: "", ru: "" },
-        title: banners.title || { uz: "", ru: "" },
+        selectedBanner: banner,
+        title: banner.title,
+        text: banner.text,
       });
     } catch (err: any) {
       set({ error: err.message });
     }
   },
 
-  createBanners: async () => {
-    const { text, title, image } = get();
-    const formData = new FormData();
-    if (image) formData.append("image", image);
-    formData.append("text", JSON.stringify(text));
-    formData.append("title", JSON.stringify(title));
+  createBanner: async () => {
+    const { title, text, image } = get();
 
-    try {
-      await axiosInstance.post(`${API_BASE}/banners`, formData);
-      await get().fetchBanners(1);
-    } catch (err: any) {
-      set({ error: err.message });
+    if (!image || image.size === 0) {
+      set({ error: "Please select an image" });
+      return;
     }
-  },
 
-  updateBanners: async (id) => {
-    const { text, title, image } = get();
+    if (!title.uz.trim() || !title.ru.trim()) {
+      set({ error: "Please provide titles in both languages" });
+      return;
+    }
+
     const formData = new FormData();
-    if (image?.name) formData.append("image", image);
-    formData.append("text", JSON.stringify(text));
+    formData.append("image", image);
     formData.append("title", JSON.stringify(title));
+    formData.append("text", JSON.stringify(text));
 
     try {
-      await axiosInstance.patch(`${API_BASE}/banners/${id}`, formData);
+      set({ loading: true, error: null });
+      await axiosInstance.post(`${API_BASE}/banners`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       await get().fetchBanners();
+      get().clearForm();
     } catch (err: any) {
       set({ error: err.message });
+    } finally {
+      set({ loading: false });
     }
   },
 
-  deleteBanners: async (id) => {
+  updateBanner: async (id) => {
+    const { title, text, image } = get();
+
+    if (!title.uz.trim() || !title.ru.trim()) {
+      set({ error: "Please provide titles in both languages" });
+      return;
+    }
+
+    const formData = new FormData();
+    if (image && image.size > 0) {
+      formData.append("image", image);
+    }
+    formData.append("title", JSON.stringify(title));
+    formData.append("text", JSON.stringify(text));
+
     try {
+      set({ loading: true, error: null });
+      await axiosInstance.patch(`${API_BASE}/banners/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      await get().fetchBanners();
+      get().clearForm();
+    } catch (err: any) {
+      set({ error: err.message });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  deleteBanner: async (id) => {
+    try {
+      set({ loading: true, error: null });
       await axiosInstance.delete(`${API_BASE}/banners/${id}`);
       await get().fetchBanners();
     } catch (err: any) {
       set({ error: err.message });
+    } finally {
+      set({ loading: false });
     }
   },
 }));

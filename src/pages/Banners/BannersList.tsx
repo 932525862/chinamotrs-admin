@@ -1,34 +1,37 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useBannersStore, type BannerItem } from "@/stores/banner";
+import { useBannerStore, type Banner } from "@/stores/banner";
 import BannersCard from "./BannersCard";
-import BannersFormModal from "./BannersFormModal";
-import { BannersDeleteModal } from "./BannersDeleteModal";
+import BannerFormModal from "./BannersFormModal";
+import { BannerDeleteModal } from "./BannersDeleteModal";
 
 
 const BannersList = () => {
-    const { banners, fetchBanners, } = useBannersStore();
-    const [selected, setSelected] = useState<BannerItem | null>(null);
+    const { banners, fetchBanners } = useBannerStore();
+    const [selected, setSelected] = useState<Banner | null>(null);
     const [formOpen, setFormOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [mode, setMode] = useState<"create" | "edit">("create");
 
     useEffect(() => {
         fetchBanners();
-    }, [])
+    }, []);
+
     const handleCreate = () => {
         setMode("create");
         setSelected(null);
         setFormOpen(true);
     };
 
-    const handleEdit = (item: BannerItem) => {
+    const handleEdit = (item: Banner) => {
         setMode("edit");
         setSelected(item);
         setFormOpen(true);
     };
 
-    const handleDelete = (item: BannerItem) => {
+    const handleDelete = (item: Banner) => {
         setSelected(item);
         setDeleteOpen(true);
     };
@@ -46,24 +49,24 @@ const BannersList = () => {
                 {banners?.map((item) => (
                     <BannersCard
                         key={item.id}
-                        banners={item}
+                        banner={item}
                         onEdit={() => handleEdit(item)}
                         onDelete={() => handleDelete(item)}
                     />
                 ))}
             </div>
 
-            <BannersFormModal
+            <BannerFormModal
                 open={formOpen}
                 setOpen={setFormOpen}
                 mode={mode}
                 banner={selected}
             />
 
-            <BannersDeleteModal
+            <BannerDeleteModal
                 open={deleteOpen}
                 setOpen={setDeleteOpen}
-                bannersId={selected?.id}
+                bannerId={selected?.id}
             />
         </div>
     );

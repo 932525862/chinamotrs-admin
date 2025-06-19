@@ -1,23 +1,23 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useBannersStore } from "@/stores/banner";
+import { useBannerStore } from "@/stores/banner";
 
 type DeleteProps = {
     open: boolean;
     setOpen: (value: boolean) => void;
-    bannersId?: number;
+    bannerId?: number;
 };
 
-export const BannersDeleteModal = ({ open, setOpen, bannersId }: DeleteProps) => {
-    const { deleteBanners } = useBannersStore();
+export const BannerDeleteModal = ({ open, setOpen, bannerId }: DeleteProps) => {
+    const { deleteBanner, loading } = useBannerStore();
 
     const handleDelete = async () => {
-        if (!bannersId) return;
+        if (!bannerId) return;
         try {
-            await deleteBanners(bannersId);
+            await deleteBanner(bannerId);
             setOpen(false);
-        } catch {
-            alert("Delete failed");
+        } catch (err: any) {
+            alert("Delete failed: " + (err.message || err));
         }
     };
 
@@ -27,10 +27,22 @@ export const BannersDeleteModal = ({ open, setOpen, bannersId }: DeleteProps) =>
                 <DialogHeader>
                     <DialogTitle>Confirm Delete</DialogTitle>
                 </DialogHeader>
-                <p>Are you sure you want to delete this banner item?</p>
-                <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+                <p>Are you sure you want to delete this banner? This action cannot be undone.</p>
+                <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => setOpen(false)}
+                        disabled={loading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                        disabled={loading}
+                    >
+                        {loading ? "Deleting..." : "Delete"}
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>
