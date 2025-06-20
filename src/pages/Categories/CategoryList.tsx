@@ -1,10 +1,10 @@
-// CategoryList.tsx (replaces table view with list)
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCategoryStore, type Category } from "@/stores/category";
 import CategoryFormModal from "./CategoryFormModal";
 import { Trash2, Pencil } from "lucide-react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import { toast } from "sonner"; // ✅ Add toast
 
 const CategoryList = () => {
     const {
@@ -15,9 +15,7 @@ const CategoryList = () => {
 
     const [openForm, setOpenForm] = useState(false);
     const [mode, setMode] = useState<"create" | "edit">("create");
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-        null
-    );
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
     useEffect(() => {
@@ -37,8 +35,14 @@ const CategoryList = () => {
 
     const confirmDelete = async () => {
         if (selectedCategory) {
-            await deleteCategory(selectedCategory.id);
-            setOpenDeleteModal(false);
+            try {
+                await deleteCategory(selectedCategory.id);
+                toast.success("Category deleted successfully");
+            } catch (err: any) {
+                toast.error("Failed to delete category: " + (err.message || err));
+            } finally {
+                setOpenDeleteModal(false);
+            }
         }
     };
 

@@ -26,11 +26,10 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
     const [phoneNumber, setPhoneNumber] = useState("")
     const [newPassword, setNewPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
-    const [activeTab, setActiveTab] = useState("phone")
+    const [activeTab, setActiveTab] = useState<"phone" | "password">("phone")
 
-    const { user } = useAuthStore()
+    const { user, updateProfile, isLoading, error, clearError } = useAuthStore()
 
-    const { updateProfile, isLoading, error, clearError } = useAuthStore()
     const handlePhoneUpdate = async () => {
         if (!phoneNumber.trim()) {
             toast.error("Please enter a phone number")
@@ -41,19 +40,18 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
             toast.error("User ID is missing")
             return
         }
-        const success = await updateProfile({ phoneNumber: phoneNumber.trim() }, user.id)
 
+        const success = await updateProfile({ phoneNumber: phoneNumber.trim() }, user.id)
         if (success) {
             toast.success("Phone number updated successfully")
-            setPhoneNumber("")
-            onOpenChange(false)
+            handleClose()
         } else {
             toast.error(error || "Failed to update phone number")
         }
     }
 
     const handlePasswordUpdate = async () => {
-        if (!newPassword) {
+        if (!newPassword.trim()) {
             toast.error("Please enter a new password")
             return
         }
@@ -69,11 +67,9 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
         }
 
         const success = await updateProfile({ password: newPassword }, user.id)
-
         if (success) {
             toast.success("Password updated successfully")
-            setNewPassword("")
-            onOpenChange(false)
+            handleClose()
         } else {
             toast.error(error || "Failed to update password")
         }
@@ -95,13 +91,21 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
                     <DialogDescription>Update your phone number or change your password.</DialogDescription>
                 </DialogHeader>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <Tabs
+                    value={activeTab}
+                    onValueChange={(val) => {
+                        setActiveTab(val as "phone" | "password")
+                        clearError()
+                    }}
+                    className="w-full"
+                >
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="phone">Phone Number</TabsTrigger>
                         <TabsTrigger value="password">Password</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="phone" className="space-y-4">
+                    {/* Phone Tab */}
+                    <TabsContent value="phone" className="space-y-4 pt-4">
                         <div className="space-y-2">
                             <Label htmlFor="phoneNumber">New Phone Number</Label>
                             <Input
@@ -111,6 +115,7 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
                                 value={phoneNumber}
                                 onChange={(e) => setPhoneNumber(e.target.value)}
                                 disabled={isLoading}
+                                autoFocus
                             />
                         </div>
                         <DialogFooter>
@@ -124,7 +129,8 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
                         </DialogFooter>
                     </TabsContent>
 
-                    <TabsContent value="password" className="space-y-4">
+                    {/* Password Tab */}
+                    <TabsContent value="password" className="space-y-4 pt-4">
                         <div className="space-y-2">
                             <Label htmlFor="newPassword">New Password</Label>
                             <div className="relative">
@@ -135,12 +141,13 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     disabled={isLoading}
+                                    autoFocus
                                 />
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                    className="absolute right-0 top-0 h-full px-3"
                                     onClick={() => setShowPassword(!showPassword)}
                                     disabled={isLoading}
                                 >
@@ -148,7 +155,6 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
                                 </Button>
                             </div>
                         </div>
-
                         <DialogFooter>
                             <Button variant="outline" onClick={handleClose} disabled={isLoading}>
                                 Cancel

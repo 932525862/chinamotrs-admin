@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef } from "react";
 import {
     Dialog,
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useNewsStore, type NewsItem } from "@/stores/news";
+import { toast } from "sonner";
 
 type Props = {
     open: boolean;
@@ -51,14 +53,16 @@ const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
         try {
             if (mode === "create") {
                 await createNews();
+                toast.success("News created successfully");
                 resetForm();
                 if (fileInputRef.current) fileInputRef.current.value = "";
             } else if (news) {
                 await updateNews(news.id);
+                toast.success("News updated successfully");
             }
             setOpen(false);
         } catch (err: any) {
-            alert("Something went wrong: " + (err.message || err));
+            toast.error("Something went wrong: " + (err.message || err));
         }
     };
 
@@ -66,14 +70,14 @@ const NewsFormModal = ({ open, setOpen, mode, news }: Props) => {
         const file = e.target.files?.[0];
         if (file) {
             if (!file.type.startsWith("image/")) {
-                alert("Please select a valid image");
+                toast.error("Please select a valid image");
                 e.target.value = "";
                 return;
             }
 
             const maxSize = 5 * 1024 * 1024;
             if (file.size > maxSize) {
-                alert("File must be under 5MB");
+                toast.error("File must be under 5MB");
                 e.target.value = "";
                 return;
             }

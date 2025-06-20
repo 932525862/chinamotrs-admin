@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useCategoryStore, type Category } from "@/stores/category";
+import { toast } from "sonner"; // ✅ Import toast
 
 type Props = {
     open: boolean;
@@ -39,12 +40,14 @@ const CategoryFormModal = ({ open, setOpen, mode, category }: Props) => {
         try {
             if (mode === "create") {
                 await createCategory();
+                toast.success("Category created successfully!");
             } else if (category) {
                 await updateCategory(category.id);
+                toast.success("Category updated successfully!");
             }
             setOpen(false);
-        } catch (err) {
-            alert("Something went wrong: " + err);
+        } catch (err: any) {
+            toast.error("Something went wrong: " + (err.message || err));
         }
     };
 

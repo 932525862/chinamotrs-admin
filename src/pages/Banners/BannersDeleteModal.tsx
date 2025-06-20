@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useBannerStore } from "@/stores/banner";
+import { toast } from "sonner";
 
 type DeleteProps = {
     open: boolean;
@@ -15,9 +16,10 @@ export const BannerDeleteModal = ({ open, setOpen, bannerId }: DeleteProps) => {
         if (!bannerId) return;
         try {
             await deleteBanner(bannerId);
+            toast.success("Banner deleted successfully!");
             setOpen(false);
         } catch (err: any) {
-            alert("Delete failed: " + (err.message || err));
+            toast.error("Delete failed: " + (err.message || "Unknown error"));
         }
     };
 

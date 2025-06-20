@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useBannerStore, type Banner } from "@/stores/banner";
+import { toast } from "sonner";
 
-// Component Props
 type Props = {
     open: boolean;
     setOpen: (value: boolean) => void;
@@ -41,49 +41,41 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
             getBannerById(banner.id);
         } else if (mode === "create") {
             clearForm();
-            // Clear the file input when creating new banner
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
+            if (fileInputRef.current) fileInputRef.current.value = "";
         }
-    }, [mode, banner, open]); // Added 'open' to dependencies to reset when modal opens/closes
+    }, [mode, banner, open]);
 
     const handleSubmit = async () => {
         try {
             if (mode === "create") {
                 await createBanner();
+                toast.success("Banner created successfully!");
                 clearForm();
-                // Clear the file input after successful creation
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                }
+                if (fileInputRef.current) fileInputRef.current.value = "";
             } else if (banner) {
                 await updateBanner(banner.id);
+                toast.success("Banner updated successfully!");
             }
             setOpen(false);
         } catch (err: any) {
-            alert("Something went wrong. " + (err.message || err));
+            toast.error("Something went wrong. " + (err.message || err));
         }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                alert('Please select a valid image file');
-                e.target.value = '';
+            if (!file.type.startsWith("image/")) {
+                toast.error("Please select a valid image file");
+                e.target.value = "";
                 return;
             }
-
-            // Validate file size (e.g., max 5MB)
-            const maxSize = 5 * 1024 * 1024; // 5MB
+            const maxSize = 5 * 1024 * 1024;
             if (file.size > maxSize) {
-                alert('File size must be less than 5MB');
-                e.target.value = '';
+                toast.error("File size must be less than 5MB");
+                e.target.value = "";
                 return;
             }
-
             setImage(file);
         } else {
             setImage(null);
@@ -97,7 +89,6 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                 ? `${UPLOAD_BASE}${selectedBanner.image_url}`
                 : null;
 
-    // Clean up object URL to prevent memory leaks
     useEffect(() => {
         return () => {
             if (previewImage && image instanceof File) {
@@ -116,7 +107,6 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                 </DialogHeader>
 
                 <div className="grid gap-4 pt-2">
-                    {/* Image Preview */}
                     {previewImage && (
                         <div className="relative">
                             <img
@@ -141,7 +131,6 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                         </div>
                     )}
 
-                    {/* Image Input */}
                     <div className="grid gap-1">
                         <Label htmlFor="image">Image</Label>
                         <Input
@@ -153,7 +142,6 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                         />
                     </div>
 
-                    {/* Title UZ */}
                     <div className="grid gap-1">
                         <Label htmlFor="titleUz">Title (Uzbek) *</Label>
                         <Input
@@ -164,7 +152,6 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                         />
                     </div>
 
-                    {/* Title RU */}
                     <div className="grid gap-1">
                         <Label htmlFor="titleRu">Title (Russian) *</Label>
                         <Input
@@ -175,7 +162,6 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                         />
                     </div>
 
-                    {/* Text UZ */}
                     <div className="grid gap-1">
                         <Label htmlFor="textUz">Text (Uzbek) *</Label>
                         <Input
@@ -186,7 +172,6 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                         />
                     </div>
 
-                    {/* Text RU */}
                     <div className="grid gap-1">
                         <Label htmlFor="textRu">Text (Russian) *</Label>
                         <Input
@@ -203,9 +188,7 @@ const BannerFormModal = ({ open, setOpen, mode, banner }: Props) => {
                             onClick={() => {
                                 setOpen(false);
                                 clearForm();
-                                if (fileInputRef.current) {
-                                    fileInputRef.current.value = "";
-                                }
+                                if (fileInputRef.current) fileInputRef.current.value = "";
                             }}
                         >
                             Cancel

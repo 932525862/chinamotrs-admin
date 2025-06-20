@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { usePartnerStore } from "@/stores/partner";
+import { toast } from "sonner"; // ✅ toast
 
 type Props = {
     open: boolean;
@@ -33,17 +34,15 @@ const PartnerFormModal = ({ open, setOpen, mode, partnerId }: Props) => {
             setSelectedPartner(null);
             setPreviewImage(null);
             setSelectedFile(null);
-            // Clear the file input when creating new partner
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
         }
     }, [mode, partnerId, open]);
 
-    // Clean up preview URL when component unmounts or preview changes
     useEffect(() => {
         return () => {
-            if (previewImage && previewImage.startsWith('blob:')) {
+            if (previewImage?.startsWith("blob:")) {
                 URL.revokeObjectURL(previewImage);
             }
         };
@@ -51,21 +50,15 @@ const PartnerFormModal = ({ open, setOpen, mode, partnerId }: Props) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         try {
-            // For create mode, file is required
-            if (mode === "create" && (!selectedFile || !(selectedFile instanceof File) || selectedFile.size === 0)) {
-                alert("Please select a valid image file");
+            if (mode === "create" && (!selectedFile || selectedFile.size === 0)) {
+                toast.error("Please select a valid image file");
                 return;
             }
 
-            // For edit mode, file is optional (only if user wants to change it)
-            if (mode === "edit" && selectedFile) {
-                // Validate file if provided
-                if (!(selectedFile instanceof File) || selectedFile.size === 0) {
-                    alert("Please select a valid image file");
-                    return;
-                }
+            if (mode === "edit" && selectedFile && selectedFile.size === 0) {
+                toast.error("Invalid image file");
+                return;
             }
 
             const fileToUpload = selectedFile;
@@ -73,19 +66,19 @@ const PartnerFormModal = ({ open, setOpen, mode, partnerId }: Props) => {
             if (mode === "edit" && partnerId) {
                 if (fileToUpload) {
                     await updatePartner(partnerId, fileToUpload);
+                    toast.success("Partner updated successfully");
                 } else {
-                    // If no new file selected in edit mode, just close the modal
                     handleCancel();
                     return;
                 }
             } else if (mode === "create" && fileToUpload) {
                 await createPartner(fileToUpload);
+                toast.success("Partner created successfully");
             }
 
-            // Clean up after successful submission
             handleCancel();
         } catch (err: any) {
-            alert("Something went wrong. " + (err.message || err));
+            toast.error("Something went wrong. " + (err.message || err));
         }
     };
 
@@ -101,52 +94,34 @@ const PartnerFormModal = ({ open, setOpen, mode, partnerId }: Props) => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-
-        // Clean up previous preview
-        if (previewImage && previewImage.startsWith('blob:')) {
+        if (previewImage?.startsWith("blob:")) {
             URL.revokeObjectURL(previewImage);
         }
 
         if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                alert('Please select a valid image file');
-                e.target.value = '';
-                setPreviewImage(null);
-                setSelectedFile(null);
+            if (!file.type.startsWith("image/")) {
+                toast.error("Please select a valid image file");
+                e.target.value = "";
                 return;
             }
 
-            // Validate file size
-            const maxSize = 5 * 1024 * 1024; // 5MB
-            if (file.size > maxSize) {
-                alert('File size must be less than 5MB');
-                e.target.value = '';
-                setPreviewImage(null);
-                setSelectedFile(null);
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("File must be less than 5MB");
+                e.target.value = "";
                 return;
             }
 
-            // Set the selected file and create preview URL
             setSelectedFile(file);
-            const previewUrl = URL.createObjectURL(file);
-            setPreviewImage(previewUrl);
+            setPreviewImage(URL.createObjectURL(file));
         } else {
-            setPreviewImage(null);
             setSelectedFile(null);
+            setPreviewImage(null);
         }
     };
 
     const handleRemoveImage = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-
-        // Clean up preview URL
-        if (previewImage && previewImage.startsWith('blob:')) {
-            URL.revokeObjectURL(previewImage);
-        }
-
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        if (previewImage?.startsWith("blob:")) URL.revokeObjectURL(previewImage);
         setPreviewImage(null);
         setSelectedFile(null);
     };
@@ -156,7 +131,6 @@ const PartnerFormModal = ({ open, setOpen, mode, partnerId }: Props) => {
         ? `${UPLOAD_BASE}${selectedPartner.logo}`
         : null;
 
-    // Determine which image to show: new preview or existing image
     const displayImage = previewImage || existingImageUrl;
 
     return (
@@ -167,7 +141,6 @@ const PartnerFormModal = ({ open, setOpen, mode, partnerId }: Props) => {
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Image Preview */}
                     {displayImage && (
                         <div className="relative">
                             <img
@@ -189,7 +162,6 @@ const PartnerFormModal = ({ open, setOpen, mode, partnerId }: Props) => {
                         </div>
                     )}
 
-                    {/* File Input */}
                     <div className="grid gap-2">
                         <Label htmlFor="logo">
                             Logo {mode === "create" && <span className="text-red-500">*</span>}

@@ -1,4 +1,3 @@
-// pages/Products/ProductDeleteDialog.tsx
 import {
     AlertDialog,
     AlertDialogAction,
@@ -8,14 +7,30 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner"; // ✅ Import toast
+import { useState } from "react";
 
 interface Props {
     open: boolean;
     onCancel: () => void;
-    onConfirm: () => void;
+    onConfirm: () => Promise<void>; // ✅ Make onConfirm async
 }
 
 const ProductDeleteDialog = ({ open, onCancel, onConfirm }: Props) => {
+    const [loading, setLoading] = useState(false);
+
+    const handleConfirm = async () => {
+        setLoading(true);
+        try {
+            await onConfirm();
+            toast.success("Product deleted successfully");
+        } catch (err: any) {
+            toast.error("Failed to delete product: " + (err.message || err));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <AlertDialog open={open} onOpenChange={onCancel}>
             <AlertDialogContent>
@@ -25,8 +40,12 @@ const ProductDeleteDialog = ({ open, onCancel, onConfirm }: Props) => {
                     </AlertDialogTitle>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+                    <AlertDialogCancel disabled={loading} onClick={onCancel}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction disabled={loading} onClick={handleConfirm}>
+                        {loading ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

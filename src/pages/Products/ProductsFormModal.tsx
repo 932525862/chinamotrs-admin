@@ -1,6 +1,7 @@
+// ProductFormModal.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type JSX } from "react";
 import {
     Dialog,
     DialogContent,
@@ -13,22 +14,17 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useProductStore } from "@/stores/product";
 import { axiosInstance } from "@/lib/axiosIntance";
+import type { Category } from "@/stores/category";
 
-interface Category {
-    id: number;
-    name: {
-        uz: string;
-        ru: string;
-    };
-}
+type ProductDetailItem = { key: string; value: string };
 
-interface Props {
+interface ProductFormModalProps {
     open: boolean;
     onClose: () => void;
-    productId: number | null;
+    productId?: string | number;
 }
 
-const ProductFormModal = ({ open, onClose, productId }: Props) => {
+const ProductFormModal = ({ open, onClose, productId }: ProductFormModalProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const {
         createProduct,
@@ -42,14 +38,14 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
     const [nameRu, setNameRu] = useState("");
     const [price, setPrice] = useState("");
     const [model, setModel] = useState("");
-    const [details, setDetails] = useState<{ key: string; value: string }[]>([]);
+    const [detailsUz, setDetailsUz] = useState<ProductDetailItem[]>([]);
+    const [detailsRu, setDetailsRu] = useState<ProductDetailItem[]>([]);
     const [categoryId, setCategoryId] = useState("");
     const [images, setImages] = useState<File[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
 
     const UPLOAD_BASE = import.meta.env.VITE_API_UPLOAD_BASE;
 
-    // Fetch categories
     useEffect(() => {
         axiosInstance.get("/api/categories").then((res) => {
             const data = res.data as { data: Category[] };
@@ -57,14 +53,10 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
         });
     }, []);
 
-    // Fetch product when editing
     useEffect(() => {
-        if (productId) {
-            getProductById(productId);
-        }
+        if (productId) getProductById(Number(productId));
     }, [productId]);
 
-    // Set fields when product is fetched
     useEffect(() => {
         if (productId && product) {
             setNameUz(product.name.uz);
@@ -72,41 +64,55 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
             setPrice(product.price.toString());
             setModel(product.model);
             setCategoryId(String(product.category?.id || product.categoryId));
-            setDetails(
-                Object.entries(product.details || {}).map(([key, value]) => ({
-                    key,
-                    value: String(value),
-                }))
-            );
+
+            const uz: ProductDetailItem[] = [], ru: ProductDetailItem[] = [];
+            if (product.details) {
+                Object.entries(product.details.uz || {}).forEach(([key, value]) => uz.push({ key, value }));
+                Object.entries(product.details.ru || {}).forEach(([key, value]) => ru.push({ key, value }));
+            }
+            setDetailsUz(uz);
+            setDetailsRu(ru);
+            setImages([]); // Clear any previous new files on edit
         } else {
-            // Reset on create
+            // Reset form
             setNameUz("");
             setNameRu("");
             setPrice("");
             setModel("");
             setCategoryId("");
-            setDetails([]);
+            setDetailsUz([]);
+            setDetailsRu([]);
             setImages([]);
         }
     }, [productId, product]);
 
+    useEffect(() => {
+        if (!open && fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    }, [open]);
+
     const handleSubmit = async () => {
+        if (!categoryId) {
+            toast.error("Please select a category");
+            return;
+        }
+
         const formData = new FormData();
         formData.append("name", JSON.stringify({ uz: nameUz, ru: nameRu }));
         formData.append("price", price);
         formData.append("model", model);
         formData.append("categoryId", categoryId);
 
-        const detailObj: Record<string, string> = {};
-        details.forEach(({ key, value }) => {
-            if (key && value) detailObj[key] = value;
-        });
-        formData.append("details", JSON.stringify(detailObj));
+        const details: { uz: { [key: string]: string }, ru: { [key: string]: string } } = { uz: {}, ru: {} };
+        detailsUz.forEach(({ key, value }) => { if (key && value) details.uz[key] = value });
+        detailsRu.forEach(({ key, value }) => { if (key && value) details.ru[key] = value });
+        formData.append("details", JSON.stringify(details));
 
-        images.forEach((img) => formData.append("images", img));
+        images.slice(0, 10).forEach(img => formData.append("images", img));
 
         const success = productId
-            ? await updateProduct(productId, formData)
+            ? await updateProduct(Number(productId), formData)
             : await createProduct(formData);
 
         if (success) {
@@ -120,13 +126,61 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setImages(Array.from(e.target.files));
+            const files = Array.from(e.target.files);
+            if (files.length > 10) {
+                toast.error("You can upload up to 10 images");
+                return;
+            }
+            setImages(files);
         }
     };
 
+    const renderDetailInputs = (
+        details: ProductDetailItem[],
+        setDetails: React.Dispatch<React.SetStateAction<ProductDetailItem[]>>,
+        label: string
+    ): JSX.Element => (
+        <div>
+            <Label>{label}</Label>
+            <div className="space-y-2">
+                {details.map((item, idx) => (
+                    <div key={idx} className="flex gap-2">
+                        <Input
+                            placeholder="Key"
+                            value={item.key}
+                            onChange={(e) => {
+                                const updated = [...details];
+                                updated[idx].key = e.target.value;
+                                setDetails(updated);
+                            }}
+                        />
+                        <Input
+                            placeholder="Value"
+                            value={item.value}
+                            onChange={(e) => {
+                                const updated = [...details];
+                                updated[idx].value = e.target.value;
+                                setDetails(updated);
+                            }}
+                        />
+                    </div>
+                ))}
+                {details.length < 6 && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDetails([...details, { key: "", value: "" }])}
+                    >
+                        + Add Detail
+                    </Button>
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-xl">
+            <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{productId ? "Edit Product" : "Add Product"}</DialogTitle>
                 </DialogHeader>
@@ -146,11 +200,7 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label>Price</Label>
-                            <Input
-                                type="number"
-                                value={price}
-                                onChange={(e) => setPrice(e.target.value)}
-                            />
+                            <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
                         </div>
                         <div>
                             <Label>Model</Label>
@@ -167,52 +217,16 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
                         >
                             <option value="">Select a category</option>
                             {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.name.uz}
-                                </option>
+                                <option key={cat.id} value={cat.id}>{cat.name.uz}</option>
                             ))}
                         </select>
                     </div>
 
-                    <div>
-                        <Label>Details (max 6)</Label>
-                        <div className="space-y-2">
-                            {details.map((item, idx) => (
-                                <div key={idx} className="flex gap-2">
-                                    <Input
-                                        placeholder="Key"
-                                        value={item.key}
-                                        onChange={(e) => {
-                                            const newDetails = [...details];
-                                            newDetails[idx].key = e.target.value;
-                                            setDetails(newDetails);
-                                        }}
-                                    />
-                                    <Input
-                                        placeholder="Value"
-                                        value={item.value}
-                                        onChange={(e) => {
-                                            const newDetails = [...details];
-                                            newDetails[idx].value = e.target.value;
-                                            setDetails(newDetails);
-                                        }}
-                                    />
-                                </div>
-                            ))}
-                            {details.length < 6 && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setDetails([...details, { key: "", value: "" }])}
-                                >
-                                    + Add Detail
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+                    {renderDetailInputs(detailsUz, setDetailsUz, "Details (Uzbek)")}
+                    {renderDetailInputs(detailsRu, setDetailsRu, "Details (Russian)")}
 
                     <div>
-                        <Label>Images</Label>
+                        <Label>Images (max 10)</Label>
                         <Input
                             type="file"
                             multiple
@@ -220,9 +234,25 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
                             ref={fileInputRef}
                         />
 
-                        {productId && (product?.images?.length ?? 0) > 0 && (
+                        {/* New images preview */}
+                        {images.length > 0 && (
                             <div className="flex gap-2 mt-2 flex-wrap">
-                                {(product?.images ?? []).map((img, idx) => (
+                                {images.map((img, idx) => (
+                                    <img
+                                        key={idx}
+                                        src={URL.createObjectURL(img)}
+                                        alt={`Preview ${idx}`}
+                                        className="w-20 h-20 object-cover border rounded"
+                                        onLoad={(e) => URL.revokeObjectURL((e.target as HTMLImageElement).src)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Existing images */}
+                        {(productId && product && product.images?.length > 0 && images.length === 0) && (
+                            <div className="flex gap-2 mt-2 flex-wrap">
+                                {product.images.slice(0, 10).map((img, idx) => (
                                     <img
                                         key={idx}
                                         src={`${UPLOAD_BASE}${img.path}`}

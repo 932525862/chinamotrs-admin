@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { usePartnerStore } from "@/stores/partner";
 import type { Partner } from "@/stores/partner";
+import { toast } from "sonner"; // ✅ import toast
 
 type Props = {
     open: boolean;
@@ -13,9 +14,14 @@ const PartnerDeleteModal = ({ open, setOpen, partner }: Props) => {
     const { deletePartner } = usePartnerStore();
 
     const handleDelete = async () => {
-        if (partner) {
+        if (!partner) return;
+
+        try {
             await deletePartner(partner.id);
+            toast.success("Partner deleted successfully"); // ✅ success feedback
             setOpen(false);
+        } catch (err: any) {
+            toast.error("Failed to delete partner: " + (err.message || err)); // ✅ error feedback
         }
     };
 
