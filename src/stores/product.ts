@@ -13,13 +13,23 @@ export type Product = {
   createdAt?: string;
 };
 
+type PaginationMeta = {
+  totalPages: number;
+  totalItems: number;
+  currentPage: number;
+};
+
 type ProductState = {
   products: Product[];
   product: Product | null;
   loading: boolean;
   error: string | null;
+  meta: PaginationMeta | null;
 
   fetchProducts: () => Promise<void>;
+  fetchPaginatedProducts: (
+    page: number
+  ) => Promise<{ data: Product[]; meta: PaginationMeta } | undefined>;
   getProductById: (id: number) => Promise<void>;
   createProduct: (formData: FormData) => Promise<boolean>;
   updateProduct: (id: number, formData: FormData) => Promise<boolean>;
@@ -31,6 +41,7 @@ export const useProductStore = create<ProductState>((set) => ({
   product: null,
   loading: false,
   error: null,
+  meta: null,
 
   fetchProducts: async () => {
     set({ loading: true });
@@ -45,10 +56,34 @@ export const useProductStore = create<ProductState>((set) => ({
     }
   },
 
+  fetchPaginatedProducts: async (page: number) => {
+    set({ loading: true });
+    try {
+      const res = await axiosInstance.get<{
+        data: Product[];
+        meta: PaginationMeta;
+      }>(`/api/products?page=${page}`);
+      set({
+        products: res.data.data,
+        meta: res.data.meta,
+        loading: false,
+      });
+      return res.data;
+    } catch (err: any) {
+      set({
+        error: err?.message || "Failed to fetch paginated products",
+        loading: false,
+      });
+      return undefined;
+    }
+  },
+
   getProductById: async (id) => {
     set({ loading: true });
     try {
-      const res = await axiosInstance.get<{ data: Product }>(`/api/products/${id}`);
+      const res = await axiosInstance.get<{ data: Product }>(
+        `/api/products/${id}`
+      );
       set({ product: res.data.data, loading: false });
     } catch (err: any) {
       set({ error: err?.message || "Failed to fetch product", loading: false });
@@ -61,7 +96,6 @@ export const useProductStore = create<ProductState>((set) => ({
       await axiosInstance.post("/api/products", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      await useProductStore.getState().fetchProducts();
       set({ loading: false });
       return true;
     } catch (err: any) {
@@ -79,7 +113,6 @@ export const useProductStore = create<ProductState>((set) => ({
       await axiosInstance.patch(`/api/products/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      await useProductStore.getState().fetchProducts();
       set({ loading: false });
       return true;
     } catch (err: any) {
@@ -95,7 +128,6 @@ export const useProductStore = create<ProductState>((set) => ({
     set({ loading: true });
     try {
       await axiosInstance.delete(`/api/products/${id}`);
-      await useProductStore.getState().fetchProducts();
       set({ loading: false });
       return true;
     } catch (err: any) {

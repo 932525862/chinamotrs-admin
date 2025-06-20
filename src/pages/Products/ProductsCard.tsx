@@ -1,45 +1,45 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import type { Product } from "@/stores/product";
 import ProductDeleteDialog from "./ProductDeleteModal";
 
-interface Props {
+type Props = {
     product: Product;
     onEdit: () => void;
     onDelete: () => void;
-}
+};
 
 const ProductCard = ({ product, onEdit, onDelete }: Props) => {
     const [showDelete, setShowDelete] = useState(false);
+    const UPLOAD_BASE = import.meta.env.VITE_API_UPLOAD_BASE;
+    const imageUrl = product.images?.[0] ? `${UPLOAD_BASE}${product.images[0]}` : null;
+
+    console.log(UPLOAD_BASE, "upload")
+    console.log(imageUrl, "imageurl")
 
     return (
         <>
-            <Card className="p-4 space-y-2">
-                <CardContent className="space-y-1">
-                    <h3 className="text-lg font-bold">{product.name.uz}</h3>
-                    <p className="text-sm text-muted-foreground">Model: {product.model}</p>
-                    <p className="text-sm text-muted-foreground">Price: {product.price} so'm</p>
-                    <p className="text-sm text-muted-foreground">Category ID: {product.categoryId}</p>
+            <Card className="border rounded-2xl p-4 space-y-2 shadow-sm bg-white relative">
+                <h3 className="text-lg font-semibold">{product.name.uz}</h3>
 
-                    {product.images?.length > 0 && (
-                        <img
-                            src={product.images[0]}
-                            alt="Product"
-                            className="w-full h-40 object-cover rounded-md border"
-                        />
-                    )}
+                {imageUrl && (
+                    <img
+                        src={imageUrl}
+                        alt="product"
+                        className="w-full h-40 object-cover rounded-xl"
+                    />
+                )}
 
-                    <div className="flex justify-end gap-2 pt-3">
-                        <Button variant="outline" size="sm" onClick={onEdit}>
-                            <Pencil className="w-4 h-4 mr-1" /> Edit
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => setShowDelete(true)}>
-                            <Trash2 className="w-4 h-4 mr-1" /> Delete
-                        </Button>
-                    </div>
-                </CardContent>
+                <p className="text-sm text-muted-foreground">RU: {product.name.ru}</p>
+                <p className="text-sm text-muted-foreground">Model: {product.model}</p>
+                <p className="text-sm text-muted-foreground">Price: {product.price} so'm</p>
+                <p className="text-sm text-muted-foreground">Category ID: {product.categoryId}</p>
+
+                <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" onClick={onEdit}>Edit</Button>
+                    <Button variant="destructive" onClick={() => setShowDelete(true)}>Delete</Button>
+                </div>
             </Card>
 
             <ProductDeleteDialog

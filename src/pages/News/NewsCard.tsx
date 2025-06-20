@@ -12,7 +12,7 @@ const NewsCard = ({ news, onEdit, onDelete }: Props) => {
     const imageUrl = `${UPLOAD_BASE}${news.image_url}`;
 
     return (
-        <div className="border rounded-2xl p-4 space-y-2 shadow-sm bg-white">
+        <div className="border rounded-2xl p-4 space-y-2 shadow-sm bg-white relative">
             <img
                 src={imageUrl}
                 alt="news"

@@ -26,7 +26,7 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
     const [price, setPrice] = useState("");
     const [model, setModel] = useState("");
     const [details, setDetails] = useState<{ key: string; value: string }[]>([]);
-    const [categoryId, setCategoryId] = useState("");
+    const [categoryId, setCategoryId] = useState(String(product?.categoryId));
     const [images, setImages] = useState<File[]>([]);
 
     useEffect(() => {
@@ -41,7 +41,7 @@ const ProductFormModal = ({ open, onClose, productId }: Props) => {
             setNameRu(product.name.ru);
             setPrice(product.price.toString());
             setModel(product.model);
-            setCategoryId(product.categoryId.toString());
+            setCategoryId(String(product.categoryId));
             setDetails(Object.entries(product.details || {}).map(([key, value]) => ({ key, value: String(value) })));
         }
     }, [productId, product]);

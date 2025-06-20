@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useOrderStore } from "@/stores/order";
-import { Button } from "@/components/ui/button";
 import OrderEditModal from "./OrderEditModal";
 import Pagination from "@/components/pagination/pagination";
 
@@ -46,18 +45,16 @@ const OrderList = () => {
                         {orders.map((order) => (
                             <tr key={order.id} className="border-t">
                                 <td className="px-4 py-2">{order.firstName}</td>
-                                <td className="px-4 py-2">+998{order.phoneNumber}</td>
+                                <td className="px-4 py-2">{order.phoneNumber.includes("+998") ? order.phoneNumber : `+998${order.phoneNumber}`}</td>
                                 <td className="px-4 py-2">{order.modelName}</td>
                                 <td className="px-4 py-2">
                                     {new Date(order.createdAt).toLocaleString()}
                                 </td>
                                 <td className="px-4 py-2">
                                     {order?.status === "NOT_CALLED" ? (
-                                        <Button size="sm" onClick={() => { handleEdit(order.id); handleSubmit(order?.id) }}>
-                                            Accept
-                                        </Button>
+                                        <button className="text-yellow-500" onClick={() => { handleSubmit(order.id); handleEdit(order.id); }}>Jarayonda</button>
                                     ) : (
-                                        <Button size="sm" onClick={() => handleEdit(order?.id)} disabled>Accepted</Button>
+                                        <button className="text-center text-green-500" disabled>Qabul qilindi</button>
                                     )}
                                 </td>
                             </tr>
@@ -68,17 +65,19 @@ const OrderList = () => {
 
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
 
-            {editId && (
-                <OrderEditModal
-                    open={modalOpen}
-                    onClose={() => {
-                        setModalOpen(false);
-                        setEditId(null);
-                    }}
-                    order={orders.find((o) => o.id === editId) || {}}
-                />
-            )}
-        </div>
+            {
+                editId && (
+                    <OrderEditModal
+                        open={modalOpen}
+                        onClose={() => {
+                            setModalOpen(false);
+                            setEditId(null);
+                        }}
+                        order={orders.find((o) => o.id === editId) || {}}
+                    />
+                )
+            }
+        </div >
     );
 };
 
