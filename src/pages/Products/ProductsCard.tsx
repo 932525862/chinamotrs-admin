@@ -44,8 +44,8 @@ const ProductCard = ({ product, onEdit, onDelete }: Props) => {
 
             <ProductDeleteDialog
                 open={showDelete}
-                onConfirm={() => {
-                    onDelete();
+                onConfirm={async () => {
+                    await onDelete();
                     setShowDelete(false);
                 }}
                 onCancel={() => setShowDelete(false)}
