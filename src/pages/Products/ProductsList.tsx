@@ -97,6 +97,7 @@ const ProductList = () => {
         fetch();
     }, [currentPage, fetchPaginatedProducts]);
 
+
     const handleCreate = () => {
         setSelected(null);
         setFormOpen(true);
@@ -132,7 +133,7 @@ const ProductList = () => {
                             <th className="p-3 border">Name (RU)</th>
                             <th className="p-3 border">Model</th>
                             <th className="p-3 border">Price</th>
-                            <th className="p-3 border">Category ID</th>
+                            <th className="p-3 border">Category</th>
                             <th className="p-3 border">Details</th>
                             <th className="p-3 border">Actions</th>
                         </tr>
@@ -143,7 +144,7 @@ const ProductList = () => {
                                 <td className="p-3 border align-top">
                                     {product.images?.[0] && (
                                         <img
-                                            src={`${UPLOAD_BASE}${product.images[0]}`}
+                                            src={`${UPLOAD_BASE}${product.images[0]?.path}`}
                                             alt="Product"
                                             className="w-16 h-16 object-cover rounded-md border"
                                         />
@@ -153,8 +154,7 @@ const ProductList = () => {
                                 <td className="p-3 border align-top">{product.name.ru}</td>
                                 <td className="p-3 border align-top" dangerouslySetInnerHTML={{ __html: product.model }} />
                                 <td className="p-3 border align-top">{product.price.toLocaleString()} so'm</td>
-                                {/* <td className="p-3 border align-top">{product.categoryId}</td> */}
-                                <td className="p-3 border align-top text-center">1</td>
+                                <td className="p-3 border align-top">{product?.category?.name.uz}</td>
                                 <td className="p-3 border align-top">
                                     {product.details && Object.entries(product.details).length > 0 ? (
                                         <table className="text-xs w-full border border-muted bg-muted/20">

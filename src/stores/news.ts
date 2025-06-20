@@ -56,18 +56,20 @@ export const useNewsStore = create<NewsState>((set, get) => ({
     set((state) => ({
       text: { ...state.text, [lang]: value },
     })),
+
   setTitle: (lang, value) =>
     set((state) => ({
       title: { ...state.title, [lang]: value },
     })),
+
   setImage: (file) => {
-    // Ensure we're setting either a valid File or null
     if (file === null || (file instanceof File && file.size > 0)) {
       set({ image: file });
     } else {
       set({ image: null });
     }
   },
+
   setPage: (page) => set({ page }),
 
   resetForm: () =>
@@ -107,7 +109,7 @@ export const useNewsStore = create<NewsState>((set, get) => ({
         selectedNews: news,
         text: news.text || { uz: "", ru: "" },
         title: news.title || { uz: "", ru: "" },
-        image: null, // Reset image when editing
+        image: null,
       });
     } catch (err: any) {
       set({ error: err.message });
@@ -117,7 +119,8 @@ export const useNewsStore = create<NewsState>((set, get) => ({
   createNews: async () => {
     const { text, title, image } = get();
 
-    // Validate required fields
+    console.log("Creating news with: title, text", { title, text }); // DEBUG
+
     if (
       !text.uz.trim() ||
       !text.ru.trim() ||
@@ -128,14 +131,11 @@ export const useNewsStore = create<NewsState>((set, get) => ({
     }
 
     const formData = new FormData();
-
-    // Only append image if it's a valid File object with content
     if (image && image instanceof File && image.size > 0) {
       formData.append("image", image);
     }
-
-    formData.append("text", JSON.stringify(text));
     formData.append("title", JSON.stringify(title));
+    formData.append("text", JSON.stringify(text));
 
     try {
       await axiosInstance.post(`${API_BASE}/news`, formData, {
@@ -153,7 +153,6 @@ export const useNewsStore = create<NewsState>((set, get) => ({
   updateNews: async (id) => {
     const { text, title, image } = get();
 
-    // Validate required fields
     if (
       !text.uz.trim() ||
       !text.ru.trim() ||
@@ -164,8 +163,6 @@ export const useNewsStore = create<NewsState>((set, get) => ({
     }
 
     const formData = new FormData();
-
-    // Only append image if it's a valid File object with content
     if (image && image instanceof File && image.size > 0) {
       formData.append("image", image);
     }

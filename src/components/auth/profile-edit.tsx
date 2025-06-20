@@ -58,8 +58,8 @@ export function ProfileEditDialog({ open, onOpenChange }: ProfileEditDialogProps
             return
         }
 
-        if (newPassword.length < 6) {
-            toast.error("Password must be at least 6 characters long")
+        if (newPassword.length < 3) {
+            toast.error("Password must be at least 3 characters long")
             return
         }
 

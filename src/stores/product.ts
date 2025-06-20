@@ -1,6 +1,11 @@
 // stores/useProductStore.ts
 import { axiosInstance } from "@/lib/axiosIntance";
 import { create } from "zustand";
+import type { Category } from "./category";
+
+export type ProdImage = {
+  path: string;
+};
 
 export type Product = {
   id: number;
@@ -9,7 +14,8 @@ export type Product = {
   model: string;
   details: Record<string, string>;
   categoryId: number;
-  images: string[];
+  category: Category;
+  images: ProdImage[];
   createdAt?: string;
 };
 

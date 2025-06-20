@@ -1,14 +1,17 @@
 import { create } from "zustand";
 import { axiosInstance } from "@/lib/axiosIntance";
 
-type TranslatedName = {
+export type TranslatedName = {
   uz: string;
   ru: string;
 };
 
 export type Category = {
   id: string;
-  name: TranslatedName;
+  name: {
+    uz: string;
+    ru: string;
+  };
 };
 
 type CategoryState = {
