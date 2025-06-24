@@ -18,8 +18,8 @@ const NewsCard = ({ news, onEdit, onDelete }: Props) => {
                 alt="news"
                 className="w-full h-40 object-cover rounded-xl"
             />
-            <p className="font-medium">UZ: {news.text.uz}</p>
-            <p className="text-sm text-muted-foreground">RU: {news.text.ru}</p>
+            <p className="font-medium">Uzb: {news.text.uz}</p>
+            <p className="text-sm text-muted-foreground">Rus: {news.text.ru}</p>
             <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={onEdit}>Edit</Button>
                 <Button variant="destructive" onClick={onDelete}>Delete</Button>
